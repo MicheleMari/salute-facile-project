@@ -1,104 +1,109 @@
-// frontend/src/apiService.js
-
-const API_URL = 'http://localhost:5000/api';
+// Definisce l'URL di base per tutte le chiamate API.
+const API_URL = "http://localhost:5000/api";
 
 /**
- * Funzione helper per gestire le risposte dell'API
- * @param {Response} response - La risposta da fetch
+ * Gestore universale per le risposte delle chiamate `fetch`.
+ * Controlla se la risposta è andata a buon fine e gestisce gli errori.
+ * @param {Response} response L'oggetto Response restituito da fetch.
+ * @returns {Promise<any>} I dati JSON della risposta.
+ * @throws {Error} Lancia un errore se la risposta non è 'ok' (es. status 4xx o 5xx).
  */
 const handleResponse = async (response) => {
-  // res.json() legge il corpo della risposta (es. { "errore": "..." })
+  // Estrae il corpo della risposta in formato JSON.
   const data = await response.json();
-  
-  // Se la risposta non è "ok" (es. 400, 401, 409, 500)
+
+  // Se la risposta HTTP non ha avuto successo (es. status 401, 404, 500),
+  // lancia un errore utilizzando il messaggio fornito dal backend.
   if (!response.ok) {
-    // Lancia un errore che useremo nel .catch()
-    // Prende il messaggio d'errore dal backend, o usa un messaggio di default
-    throw new Error(data.errore || 'Si è verificato un errore');
+    throw new Error(data.errore || "Si è verificato un errore sconosciuto");
   }
-  
-  // Se è "ok", restituisce i dati (es. { "messaggio": "...", "access_token": "..." })
+
+  // Altrimenti, restituisce i dati.
   return data;
 };
 
 /**
- * Chiama l'endpoint /api/register
- * @param {object} userData - { nome, cognome, email, password }
+ * Effettua la registrazione di un nuovo utente.
+ * @param {object} userData Dati dell'utente da registrare (nome, cognome, email, password).
+ * @returns {Promise<object>} La risposta del server.
  */
 export const registerUser = (userData) => {
   return fetch(`${API_URL}/register`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(userData),
-  }).then(handleResponse); // Passa la risposta al nostro helper
+  }).then(handleResponse);
 };
 
 /**
- * Chiama l'endpoint /api/login
- * @param {object} credentials - { email, password }
+ * Effettua il login di un utente.
+ * @param {object} credentials Credenziali dell'utente (email, password).
+ * @returns {Promise<object>} La risposta del server, che include il token di accesso.
  */
 export const loginUser = (credentials) => {
   return fetch(`${API_URL}/login`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(credentials),
   }).then(handleResponse);
 };
 
-// --- Funzioni Aggiuntive ---
-
 /**
- * Helper per ottenere l'header di autorizzazione con il token JWT
+ * Funzione helper per creare l'header di autorizzazione con il token JWT.
+ * @returns {object} Un oggetto contenente gli header per le richieste autenticate.
  */
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
   return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
   };
 };
 
 /**
- * Chiama l'endpoint /api/medici
+ * Recupera la lista di tutti i medici.
+ * @returns {Promise<Array<object>>} Un array di oggetti, ciascuno rappresentante un medico.
  */
 export const getMedici = () => {
   return fetch(`${API_URL}/medici`, {
-    method: 'GET'
+    method: "GET"
   }).then(handleResponse);
 };
 
 /**
- * Chiama l'endpoint /api/medici/<id>/disponibilita
- * @param {number} medicoId - L'ID del medico
+ * Recupera gli slot di disponibilità per un medico specifico.
+ * @param {number} medicoId L'ID del medico.
+ * @returns {Promise<Array<object>>} Un array di slot di disponibilità.
  */
 export const getDisponibilita = (medicoId) => {
   return fetch(`${API_URL}/medici/${medicoId}/disponibilita`, {
-    method: 'GET'
+    method: "GET"
   }).then(handleResponse);
 };
 
 /**
- * Chiama l'endpoint /api/appuntamenti per il GET
+ * Recupera la lista degli appuntamenti per l'utente loggato.
+ * @returns {Promise<Array<object>>} Un array di appuntamenti.
  */
 export const getMyAppuntamenti = () => {
   return fetch(`${API_URL}/appuntamenti`, {
-    method: 'GET',
+    method: "GET",
     headers: getAuthHeader()
   }).then(handleResponse);
 };
 
-
 /**
- * Chiama l'endpoint /api/appuntamenti per il POST
- * @param {object} data - { disponibilita_id: ... }
+ * Invia una richiesta per prenotare un nuovo appuntamento.
+ * @param {object} data Contiene l'ID dello slot di disponibilità da prenotare.
+ * @returns {Promise<object>} La conferma della prenotazione.
  */
 export const prenotaAppuntamento = (data) => {
   return fetch(`${API_URL}/appuntamenti`, {
-    method: 'POST',
+    method: "POST",
     headers: getAuthHeader(),
     body: JSON.stringify(data),
   }).then(handleResponse);

@@ -1,5 +1,3 @@
-# backend/app.py
-
 import os
 import datetime
 from flask import Flask, jsonify, request
@@ -13,30 +11,20 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
-# --- Configurazione Iniziale ---
-
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-# Configura CORS per permettere al frontend (localhost:3000) di chiamare l'API
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# --- Configurazione Database SQLite ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'salute_facile.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# --- Configurazione Chiave Segreta JWT ---
-# !! IMPORTANTE: Cambia questa stringa con una tua chiave segreta e casuale !!
 app.config["JWT_SECRET_KEY"] = "la-tua-chiave-segreta-molto-difficile-e-casuale"
 
-# --- Inizializzazione Estensioni ---
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
-# --- Modelli Database (Tabelle) ---
-
 class Utente(db.Model):
-    """ Modello per gli utenti (pazienti e medici) """
     __tablename__ = 'utenti'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -50,7 +38,6 @@ class Utente(db.Model):
                                             back_populates='paziente')
 
 class Medico(db.Model):
-    """ Modello per i profili dei medici """
     __tablename__ = 'medici'
     id = db.Column(db.Integer, primary_key=True)
     nome_completo = db.Column(db.String(160), nullable=False)
@@ -60,7 +47,6 @@ class Medico(db.Model):
     disponibilita = db.relationship('Disponibilita', back_populates='medico')
 
 class Disponibilita(db.Model):
-    """ Modello per gli slot orari disponibili dei medici """
     __tablename__ = 'disponibilita'
     id = db.Column(db.Integer, primary_key=True)
     data_inizio = db.Column(db.DateTime, nullable=False)
@@ -72,7 +58,6 @@ class Disponibilita(db.Model):
     appuntamento = db.relationship('Appuntamento', back_populates='slot_disponibile', uselist=False)
 
 class Appuntamento(db.Model):
-    """ Modello per le prenotazioni effettuate """
     __tablename__ = 'appuntamenti'
     id = db.Column(db.Integer, primary_key=True)
     data_prenotazione = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
@@ -84,17 +69,12 @@ class Appuntamento(db.Model):
     paziente = db.relationship('Utente', back_populates='appuntamenti_paziente')
     slot_disponibile = db.relationship('Disponibilita', back_populates='appuntamento')
 
-# --- API Endpoints ---
-
 @app.route("/")
 def home():
-    return "Backend Salute Facile Attivo! (JWT, Bcrypt, SQLAlchemy)"
-
-# --- Endpoint di Autenticazione ---
+    return "Backend SaluteFacile Attivo! (JWT, Bcrypt, SQLAlchemy)"
 
 @app.route("/api/register", methods=['POST'])
 def register_user():
-    """Registra un nuovo utente."""
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
@@ -104,10 +84,12 @@ def register_user():
     if not email or not password or not nome or not cognome:
         return jsonify({"errore": "Campi mancanti (email, password, nome, cognome)"}), 400
 
+    # Controlla se l'email è già in uso
     utente_esistente = Utente.query.filter_by(email=email).first()
     if utente_esistente:
         return jsonify({"errore": "Email già registrata"}), 409
 
+    # Crea l'hash della password per non salvarla in chiaro
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
     nuovo_utente = Utente(
@@ -131,7 +113,6 @@ def register_user():
 
 @app.route("/api/login", methods=['POST'])
 def login_user():
-    """Esegue il login di un utente e restituisce un token JWT."""
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
@@ -142,9 +123,6 @@ def login_user():
     utente = Utente.query.filter_by(email=email).first()
 
     if utente and bcrypt.check_password_hash(utente.password_hash, password):
-        
-        # --- QUESTA È LA CORREZIONE ---
-        # L'identità (identity) DEVE essere una stringa
         access_token = create_access_token(identity=str(utente.id)) 
         
         return jsonify({
@@ -155,19 +133,11 @@ def login_user():
     else:
         return jsonify({"errore": "Credenziali non valide"}), 401
 
-# --- Endpoint Protetti (Richiedono JWT) ---
-
 @app.route("/api/profilo", methods=['GET'])
-@jwt_required() # Questo "buttafuori" legge il token
+@jwt_required()
 def get_profilo():
-    """
-    Restituisce i dati del profilo dell'utente loggato.
-    Accessibile solo con un token JWT valido.
-    """
-    # get_jwt_identity() legge il "subject" dal token (che ora è una stringa, es. "1")
     current_user_id = get_jwt_identity()
     
-    # Utente.query.get() gestisce correttamente sia "1" che 1
     utente = Utente.query.get(current_user_id)
     
     if not utente:
@@ -181,11 +151,8 @@ def get_profilo():
         "ruolo": utente.ruolo
     }), 200
 
-# --- Endpoint Pubblici (Accessibili a tutti) ---
-
 @app.route("/api/medici", methods=['GET'])
 def get_medici():
-    """Restituisce la lista di tutti i medici."""
     try:
         medici_dal_db = Medico.query.all()
         lista_medici_json = []
@@ -202,20 +169,11 @@ def get_medici():
     except Exception as e:
         return jsonify({"errore": str(e)}), 500
 
-# --- Endpoint Pubblici (Accessibili a tutti) ---
-
-
-
 @app.route("/api/medici/<int:medico_id>/disponibilita", methods=['GET'])
 
 def get_disponibilita_medico(medico_id):
 
-    """Restituisce gli slot di disponibilità non prenotati per un medico specifico."""
-
     try:
-
-        # Query per trovare gli slot dove è_prenotato è False
-
         slots_disponibili = Disponibilita.query.filter_by(
 
             medico_id=medico_id, 
@@ -223,10 +181,6 @@ def get_disponibilita_medico(medico_id):
             è_prenotato=False
 
         ).all()
-
-
-
-        # Formatta i dati per il frontend
 
         lista_slot_json = []
 
@@ -252,19 +206,11 @@ def get_disponibilita_medico(medico_id):
 
         return jsonify({"errore": f"Errore del server: {str(e)}"}), 500
 
-
-
-# --- Endpoint Protetti per Appuntamenti (Paziente) ---
-
-
-
 @app.route("/api/appuntamenti", methods=['GET'])
 
 @jwt_required()
 
 def get_miei_appuntamenti():
-
-    """Restituisce la lista degli appuntamenti per il paziente loggato."""
 
     current_user_id = get_jwt_identity()
 
@@ -326,27 +272,19 @@ def get_miei_appuntamenti():
 
 def prenota_appuntamento():
 
-    """Permette a un paziente di prenotare uno slot di disponibilità."""
-
     current_user_id = get_jwt_identity()
 
     data = request.get_json()
 
     disponibilita_id = data.get('disponibilita_id')
 
-
-
     if not disponibilita_id:
 
         return jsonify({"errore": "ID della disponibilità mancante"}), 400
 
-
-
     try:
 
         slot = Disponibilita.query.get(disponibilita_id)
-
-
 
         if not slot:
 
@@ -420,36 +358,23 @@ def seed_database():
 
             return
 
-
-
         print("Popolamento del database con dati di esempio...")
 
-
-
-        # 1. Crea Medici
-
+        # 1. Creazione di alcuni medici di esempio
         medico1 = Medico(nome_completo="Dott. Mario Rossi", specializzazione="Cardiologia", descrizione="Esperto in cardiologia clinica e interventistica.")
 
         medico2 = Medico(nome_completo="Dott.ssa Anna Bianchi", specializzazione="Dermatologia", descrizione="Specializzata in dermatologia estetica e mappatura nevi.")
 
         medico3 = Medico(nome_completo="Dott. Luca Verdi", specializzazione="Ortopedia", descrizione="Focus su chirurgia del ginocchio e anca.")
 
-        
-
         db.session.add_all([medico1, medico2, medico3])
 
         db.session.commit()
 
-
-
-        # 2. Crea Disponibilità per i medici
-
+        # 2. Creazione di slot di disponibilità per i medici
         today = datetime.date.today()
 
-        
-
-        # Slot per Dott. Rossi (Cardiologo)
-
+        # Slot per il Dott. Rossi
         for i in range(3):
 
             giorno = today + datetime.timedelta(days=i + 1)
@@ -458,10 +383,7 @@ def seed_database():
 
             db.session.add(Disponibilita(medico_id=medico1.id, data_inizio=datetime.datetime(giorno.year, giorno.month, giorno.day, 10, 0), data_fine=datetime.datetime(giorno.year, giorno.month, giorno.day, 10, 30)))
 
-
-
-        # Slot per Dott.ssa Bianchi (Dermatologa)
-
+        # Slot per la Dott.ssa Bianchi
         for i in range(2):
 
             giorno = today + datetime.timedelta(days=i + 2)

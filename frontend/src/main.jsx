@@ -2,20 +2,24 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom'; // Importa il Router
+import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 
-// Importa Bootstrap CSS
+// Importa Bootstrap
 import 'bootstrap/dist/css/bootstrap.min.css';
-
-// Importa il CSS di default (lo lasciamo)
+// Importa il CSS di default
 import './index.css';
+
+// 1. Importa il nostro AuthProvider
+import { AuthProvider } from './AuthContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* Avvolge tutta l'app nel Router */}
     <BrowserRouter>
-      <App />
+      {/* 2. Avvolgi l'App con AuthProvider */}
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>,
 );

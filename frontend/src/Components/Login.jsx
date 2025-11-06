@@ -2,30 +2,32 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../apiService';
+import { loginUser } from '../apiService'; // Importa la funzione API
+import { useAuth } from '../AuthContext';   // Importa l'hook per l'autenticazione
 
-function Login({ setUser }) { // Accetta setUser come prop
+function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { login } = useAuth(); // Ottieni la funzione login dal Context
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError(null);
 
     try {
+      // Chiama l'API con le credenziali
       const data = await loginUser({ email, password });
 
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.utente));
-      
-      setUser(data.utente); // Aggiorna lo stato del genitore (App.jsx)
+      // Usa la funzione del Context per salvare i dati e il token
+      login(data.utente, data.access_token);
 
       alert('Login effettuato con successo!');
-      navigate('/');
-
+      navigate('/'); // Reindirizza alla Home Page
+      
     } catch (err) {
+      // Se l'API lancia un errore (es. "Credenziali non valide")
       console.error(err.message);
       setError(err.message);
     }
@@ -38,15 +40,16 @@ function Login({ setUser }) { // Accetta setUser come prop
           <div className="card">
             <div className="card-body">
               <h2 className="card-title text-center">Login</h2>
+              
+              {/* Qui mostriamo l'errore, se c'è */}
+              {error && (
+                <div className="alert alert-danger" role="alert">
+                  {error}
+                </div>
+              )}
+              
+              {/* Questo è il FORM */}
               <form onSubmit={handleSubmit}>
-                {/* 8. Mostra l'errore */}
-                {error && (
-                  <div className="alert alert-danger" role="alert">
-                    {error}
-                  </div>
-                )}
-                
-                {/* ... (i campi input restano invariati) ... */}
                 <div className="mb-3">
                   <label htmlFor="emailInput" className="form-label">Email</label>
                   <input

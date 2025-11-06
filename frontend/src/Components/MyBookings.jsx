@@ -34,17 +34,25 @@ function MyBookings() {
   return (
     <div className="container mt-5">
       <h2>I Miei Appuntamenti</h2>
+      <p>Qui trovi l'elenco delle tue prossime visite.</p>
       {appuntamenti.length > 0 ? (
-        <ul className="list-group">
+        <div className="row">
           {appuntamenti.map(app => (
-            <li key={app.id} className="list-group-item">
-              <p><strong>Medico:</strong> {app.medico.nome_completo} ({app.medico.specializzazione})</p>
-              <p><strong>Data:</strong> {new Date(app.slot.data_inizio).toLocaleDateString()}</p>
-              <p><strong>Ora:</strong> {new Date(app.slot.data_inizio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-              <p><strong>Stato:</strong> <span className="badge bg-success">{app.stato}</span></p>
-            </li>
+            <div key={app.id} className="col-md-6 col-lg-4 mb-4">
+              <div className="card h-100">
+                <div className="card-body">
+                  <h5 className="card-title">{app.medico.specializzazione}</h5>
+                  <h6 className="card-subtitle mb-2 text-muted">{app.medico.nome_completo}</h6>
+                  <p className="card-text">
+                    <strong>Data:</strong> {new Date(app.slot.data_inizio).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })}<br/>
+                    <strong>Ora:</strong> {new Date(app.slot.data_inizio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  <span className="badge bg-success">{app.stato}</span>
+                </div>
+              </div>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : (
         <p>Non hai nessun appuntamento prenotato.</p>
       )}
