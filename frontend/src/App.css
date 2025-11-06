@@ -1,0 +1,92 @@
+/* Mobile-first approach */
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem; /* Reduced padding for mobile */
+  text-align: center;
+}
+
+.container {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.btn {
+  width: 100%; /* Full-width buttons on mobile */
+  margin-bottom: 0.5rem;
+}
+
+.list-group-item {
+  padding: 0.75rem 1rem;
+  flex-direction: column; /* Stack items vertically on mobile */
+  align-items: flex-start;
+}
+
+.list-group-item div {
+  width: 100%;
+}
+
+.navbar-nav .nav-item {
+  margin-bottom: 0.5rem; /* Space out nav items on mobile */
+}
+
+/* Tablet styles */
+@media (min-width: 768px) {
+  #root {
+    padding: 2rem;
+  }
+
+  .btn {
+    width: auto; /* Auto width for buttons on tablets and larger */
+    margin-bottom: 0;
+  }
+
+  .list-group-item {
+    flex-direction: row; /* Horizontal layout for tablets and larger */
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .navbar-nav .nav-item {
+    margin-bottom: 0; /* Reset margin for larger screens */
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.read-the-docs {
+  color: #888;
+}
