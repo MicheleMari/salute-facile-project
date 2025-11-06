@@ -8,6 +8,7 @@ import Register from './Components/Register';
 import Login from './Components/Login';
 import DoctorList from './Components/DoctorList';
 import MyBookings from './Components/MyBookings';
+import DoctorDetail from './Components/DoctorDetail';
 import ProtectedRoute from './Components/ProtectedRoute';
 
 function App() {
@@ -27,6 +28,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DoctorList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/medici/:id"
+            element={
+              <ProtectedRoute>
+                <DoctorDetail />
               </ProtectedRoute>
             }
           />

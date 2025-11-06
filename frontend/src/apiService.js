@@ -75,6 +75,17 @@ export const getMedici = () => {
 };
 
 /**
+ * Recupera i dettagli di un singolo medico.
+ * @param {number} medicoId L'ID del medico.
+ * @returns {Promise<object>} Un oggetto con i dettagli del medico.
+ */
+export const getMedicoDetail = (medicoId) => {
+  return fetch(`${API_URL}/medici/${medicoId}`, {
+    method: "GET"
+  }).then(handleResponse);
+};
+
+/**
  * Recupera gli slot di disponibilità per un medico specifico.
  * @param {number} medicoId L'ID del medico.
  * @returns {Promise<Array<object>>} Un array di slot di disponibilità.
@@ -106,5 +117,17 @@ export const prenotaAppuntamento = (data) => {
     method: "POST",
     headers: getAuthHeader(),
     body: JSON.stringify(data),
+  }).then(handleResponse);
+};
+
+/**
+ * Invia una richiesta per cancellare un appuntamento.
+ * @param {number} appuntamentoId L'ID dell'appuntamento da cancellare.
+ * @returns {Promise<object>} La conferma della cancellazione.
+ */
+export const cancellaAppuntamento = (appuntamentoId) => {
+  return fetch(`${API_URL}/appuntamenti/${appuntamentoId}`, {
+    method: "DELETE",
+    headers: getAuthHeader(),
   }).then(handleResponse);
 };

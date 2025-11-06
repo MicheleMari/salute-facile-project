@@ -43,6 +43,9 @@ class Medico(db.Model):
     nome_completo = db.Column(db.String(160), nullable=False)
     specializzazione = db.Column(db.String(100), nullable=False)
     descrizione = db.Column(db.Text, nullable=True)
+    foto_url = db.Column(db.String(255), nullable=True)
+    linkedin_url = db.Column(db.String(255), nullable=True)
+    sito_web_url = db.Column(db.String(255), nullable=True)
     
     disponibilita = db.relationship('Disponibilita', back_populates='medico')
 
@@ -166,6 +169,27 @@ def get_medici():
         
         return jsonify(lista_medici_json)
     
+    except Exception as e:
+        return jsonify({"errore": str(e)}), 500
+
+@app.route("/api/medici/<int:medico_id>", methods=['GET'])
+def get_medico_detail(medico_id):
+    """Restituisce i dettagli di un singolo medico."""
+    try:
+        medico = Medico.query.get(medico_id)
+        if not medico:
+            return jsonify({"errore": "Medico non trovato"}), 404
+        
+        return jsonify({
+            "id": medico.id,
+            "nome_completo": medico.nome_completo,
+            "specializzazione": medico.specializzazione,
+            "descrizione": medico.descrizione,
+            "foto_url": medico.foto_url,
+            "linkedin_url": medico.linkedin_url,
+            "sito_web_url": medico.sito_web_url
+        })
+
     except Exception as e:
         return jsonify({"errore": str(e)}), 500
 
